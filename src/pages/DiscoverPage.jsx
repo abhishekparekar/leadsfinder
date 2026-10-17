@@ -26,7 +26,21 @@ import {
   Building2,
   Trash2,
   SlidersHorizontal,
-  MapPinned
+  MapPinned,
+  Activity,
+  Dumbbell,
+  Utensils,
+  GraduationCap,
+  HeartPulse,
+  Microscope,
+  Scissors,
+  Stethoscope,
+  Laptop,
+  Car,
+  Palette,
+  Briefcase,
+  Layers,
+  Compass
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { api } from '../services/api';
@@ -54,22 +68,40 @@ const DEFAULT_CATEGORIES = [
   'Interior Designers'
 ];
 
-const CATEGORY_ICONS = {
-  'All': '🌐',
-  'Dental Clinic': '🦷',
-  'Gym & Fitness': '🏋️',
-  'Restaurant & Cafe': '🍽️',
-  'Skin, Hair & Aesthetics': '💆',
-  'Real Estate & Realtors': '🏢',
-  'Coaching & Education': '🎓',
-  'Physiotherapy & Orthopedic': '🦴',
-  'Diagnostic Center & Labs': '🔬',
-  'Salons & Luxury Spas': '💇',
-  'Hospitals & Healthcare': '🏥',
-  'IT & Software Agency': '💻',
-  'Car Care & Auto Detailing': '🚗',
-  'Interior Designers': '🛋️'
-};
+export function getCategoryIcon(cat, className = "w-3.5 h-3.5") {
+  switch (cat) {
+    case 'Dental Clinic':
+      return <Activity className={className} />;
+    case 'Gym & Fitness':
+      return <Dumbbell className={className} />;
+    case 'Restaurant & Cafe':
+      return <Utensils className={className} />;
+    case 'Skin, Hair & Aesthetics':
+      return <Sparkles className={className} />;
+    case 'Real Estate & Realtors':
+      return <Building2 className={className} />;
+    case 'Coaching & Education':
+      return <GraduationCap className={className} />;
+    case 'Physiotherapy & Orthopedic':
+      return <HeartPulse className={className} />;
+    case 'Diagnostic Center & Labs':
+      return <Microscope className={className} />;
+    case 'Salons & Luxury Spas':
+      return <Scissors className={className} />;
+    case 'Hospitals & Healthcare':
+      return <Stethoscope className={className} />;
+    case 'IT & Software Agency':
+      return <Laptop className={className} />;
+    case 'Car Care & Auto Detailing':
+      return <Car className={className} />;
+    case 'Interior Designers':
+      return <Palette className={className} />;
+    case 'All':
+      return <Layers className={className} />;
+    default:
+      return <Briefcase className={className} />;
+  }
+}
 
 const POPULAR_LOCATIONS = [
   'Chhatrapati Sambhajinagar',
@@ -317,10 +349,10 @@ export function DiscoverPage({ onOpenOutreach }) {
       <div className="space-y-3">
         <form onSubmit={handleSearch} className="p-3 sm:p-4 rounded-2xl bg-slate-900 border border-slate-700/80 shadow-2xl space-y-3">
           {/* Main Google Maps Style Search Row */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5 items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5 items-center">
             
-            {/* Field 1: Service / Business Category with + Add Category button (5 cols) */}
-            <div className="md:col-span-5 relative flex items-center bg-slate-950 rounded-xl border border-slate-800 hover:border-slate-700 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition px-3 py-2 gap-2">
+            {/* Field 1: Service / Business Category with + Add Category button */}
+            <div className="sm:col-span-2 lg:col-span-5 relative flex items-center bg-slate-950 rounded-xl border border-slate-800 hover:border-slate-700 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition px-3 py-2 gap-2">
               <Store className="w-4 h-4 text-cyan-400 shrink-0" />
               <div className="flex-1 min-w-0">
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
@@ -340,11 +372,11 @@ export function DiscoverPage({ onOpenOutreach }) {
                 >
                   {allCategories.map(c => (
                     <option key={c} value={c} className="bg-slate-900 text-slate-200">
-                      {CATEGORY_ICONS[c] || '🏷️'} {c} {customCategories.includes(c) ? '★ (Custom)' : ''}
+                      {c} {customCategories.includes(c) ? '(Custom)' : ''}
                     </option>
                   ))}
                   <option value="__ADD_NEW__" className="bg-slate-900 text-cyan-400 font-bold">
-                    ➕ + Add Custom Category...
+                    + Add Custom Category...
                   </option>
                 </select>
               </div>
@@ -361,8 +393,8 @@ export function DiscoverPage({ onOpenOutreach }) {
               </button>
             </div>
 
-            {/* Field 2: Google Maps Location Field with Map Pin & Autocomplete (4 cols) */}
-            <div className="md:col-span-4 relative flex items-center bg-slate-950 rounded-xl border border-slate-800 hover:border-slate-700 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition px-3 py-2 gap-2">
+            {/* Field 2: Google Maps Location Field with Map Pin & Autocomplete */}
+            <div className="sm:col-span-2 lg:col-span-4 relative flex items-center bg-slate-950 rounded-xl border border-slate-800 hover:border-slate-700 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition px-3 py-2 gap-2">
               <MapPin className="w-4 h-4 text-rose-500 fill-rose-500/20 shrink-0 animate-pulse" />
               <div className="flex-1 min-w-0">
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
@@ -446,8 +478,8 @@ export function DiscoverPage({ onOpenOutreach }) {
               )}
             </div>
 
-            {/* Field 3: Radius Selector (1.5 cols) */}
-            <div className="md:col-span-1.5 bg-slate-950 rounded-xl border border-slate-800 px-2.5 py-2">
+            {/* Field 3: Radius Selector */}
+            <div className="col-span-1 lg:col-span-1.5 bg-slate-950 rounded-xl border border-slate-800 px-2.5 py-2">
               <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 Radius
               </label>
@@ -463,8 +495,8 @@ export function DiscoverPage({ onOpenOutreach }) {
               </select>
             </div>
 
-            {/* Field 4: Google Maps Search Action Button (1.5 cols) */}
-            <div className="md:col-span-1.5">
+            {/* Field 4: Google Maps Search Action Button */}
+            <div className="col-span-1 lg:col-span-1.5">
               <button
                 type="submit"
                 disabled={loading}
@@ -549,7 +581,7 @@ export function DiscoverPage({ onOpenOutreach }) {
         </form>
 
         {/* Google Maps Style Category Pills Bar (Under Search) */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-thin scrollbar-thumb-slate-800">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-thin scrollbar-thumb-slate-800 touch-pan-x">
           {/* Prominent + Add Category Chip */}
           <button
             type="button"
@@ -560,7 +592,7 @@ export function DiscoverPage({ onOpenOutreach }) {
             <span>+ Add Category</span>
           </button>
 
-          {/* Quick Categories */}
+          {/* Quick Categories with Lucide SVG Icons */}
           {allCategories.map((cat) => {
             const isSelected = category === cat;
             const isCustom = customCategories.includes(cat);
@@ -578,7 +610,9 @@ export function DiscoverPage({ onOpenOutreach }) {
                       : 'bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border-slate-800'
                   }`}
                 >
-                  <span>{CATEGORY_ICONS[cat] || '🏷️'}</span>
+                  <span className={isSelected ? 'text-white' : 'text-cyan-400'}>
+                    {getCategoryIcon(cat, "w-3.5 h-3.5")}
+                  </span>
                   <span>{cat}</span>
                   {isCustom && (
                     <span 
@@ -596,7 +630,7 @@ export function DiscoverPage({ onOpenOutreach }) {
         </div>
 
         {/* Quick Area Preset Chips (Google Maps Nearby Suggestions) */}
-        <div className="flex items-center gap-1.5 overflow-x-auto text-xs text-slate-400 pb-1">
+        <div className="flex items-center gap-1.5 overflow-x-auto text-xs text-slate-400 pb-1 touch-pan-x">
           <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1">
             <MapPin className="w-3 h-3 text-rose-400" /> Areas:
           </span>
@@ -646,17 +680,21 @@ export function DiscoverPage({ onOpenOutreach }) {
                 Enter keywords or choose a target business category above and click Search Businesses to find prospective leads.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-2 max-w-xl mx-auto">
-                <span className="text-xs text-slate-500 mr-1">Quick Categories:</span>
-                {['Dental Clinic', 'Skin/Hair Clinic', 'Physiotherapy & Orthopedic', 'Diagnostic Center', 'Coaching Class'].map(cat => (
+                <span className="text-xs text-slate-500 mr-1 flex items-center gap-1">
+                  <Tag className="w-3.5 h-3.5 text-slate-400" />
+                  Popular Niches:
+                </span>
+                {['Dental Clinic', 'Gym & Fitness', 'Restaurant & Cafe', 'Skin, Hair & Aesthetics', 'Real Estate & Realtors', 'Physiotherapy & Orthopedic'].map(cat => (
                   <button
                     key={cat}
                     onClick={() => {
                       setCategory(cat);
                       handleSearch(null, cat);
                     }}
-                    className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-xs font-semibold text-slate-300 hover:text-white border border-slate-700 transition"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-xs font-semibold text-slate-300 hover:text-white border border-slate-700 transition"
                   >
-                    {cat}
+                    <span className="text-cyan-400">{getCategoryIcon(cat, "w-3.5 h-3.5")}</span>
+                    <span>{cat}</span>
                   </button>
                 ))}
               </div>
@@ -738,8 +776,9 @@ export function DiscoverPage({ onOpenOutreach }) {
                               <Square className="w-4 h-4 text-slate-600" />
                             )}
                           </button>
-                          <span className="text-[11px] font-bold uppercase tracking-wider text-cyan-400">
-                            {item.category}
+                          <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-cyan-400 bg-cyan-950/40 px-2 py-0.5 rounded-md border border-cyan-800/40">
+                            {getCategoryIcon(item.category, "w-3 h-3 text-cyan-400")}
+                            <span>{item.category}</span>
                           </span>
                         </div>
                         <ScorePill score={item.score} size="sm" />

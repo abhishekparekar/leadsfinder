@@ -9,7 +9,9 @@ import {
   MapPin, 
   X,
   TrendingUp,
-  UserCheck
+  UserCheck,
+  Trophy,
+  CheckCircle2
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -25,7 +27,7 @@ const PIPELINE_STAGES = [
   { id: 'Meeting Booked', label: 'Meeting Booked', color: 'border-purple-700/40 bg-purple-950/20' },
   { id: 'Proposal Sent', label: 'Proposal Sent', color: 'border-amber-700/40 bg-amber-950/20' },
   { id: 'Negotiation', label: 'Negotiation', color: 'border-orange-700/40 bg-orange-950/20' },
-  { id: 'Won', label: 'Closed Won 🎉', color: 'border-emerald-600/50 bg-emerald-950/30' },
+  { id: 'Won', label: 'Closed Won', color: 'border-emerald-600/50 bg-emerald-950/30' },
   { id: 'Lost', label: 'Lost / Closed', color: 'border-rose-800/40 bg-rose-950/20' }
 ];
 
@@ -282,9 +284,10 @@ export function PipelinePage({ onOpenOutreach }) {
               </button>
               <button
                 onClick={handleConfirmWon}
-                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition shadow-lg shadow-emerald-600/30"
+                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition shadow-lg shadow-emerald-600/30 flex items-center gap-1.5"
               >
-                Confirm Won Deal 🎉
+                <Trophy className="w-3.5 h-3.5 text-white" />
+                <span>Confirm Won Deal</span>
               </button>
             </div>
           </div>

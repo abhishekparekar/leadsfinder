@@ -23,6 +23,7 @@ import { useAuth } from '../context/AuthContext';
 import { PriorityBadge, StageBadge } from '../components/common/Badge';
 import { ScorePill } from '../components/common/ScorePill';
 import { LeadDetailModal } from '../components/leads/LeadDetailModal';
+import { getCategoryIcon } from './DiscoverPage';
 
 export function LeadsPage({ onOpenOutreach }) {
   const { currentUser, isSales, isAdmin, canExport } = useAuth();
@@ -290,7 +291,10 @@ export function LeadsPage({ onOpenOutreach }) {
                           {lead.businessName}
                         </button>
                         <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
-                          <span className="text-cyan-400 font-semibold">{lead.category}</span>
+                          <span className="inline-flex items-center gap-1 text-cyan-400 font-semibold">
+                            {getCategoryIcon(lead.category, "w-3 h-3 text-cyan-400")}
+                            <span>{lead.category}</span>
+                          </span>
                           <span>•</span>
                           <span>{lead.locality || lead.city}</span>
                         </div>
