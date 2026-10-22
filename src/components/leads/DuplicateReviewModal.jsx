@@ -48,7 +48,7 @@ export function DuplicateReviewModal({ isOpen, newLead, existingLead, onClose, o
             <p className="text-slate-300 font-mono">Phone: {existingLead.businessPhone || 'None'}</p>
             <p className="text-slate-300 truncate">Website: {existingLead.businessWebsite || 'None'}</p>
             <p className="text-slate-400">{existingLead.address || existingLead.locality}</p>
-            <p className="text-[11px] text-amber-400/90 font-medium">Owner: {existingLead.ownerName || 'Pooja Deshmukh'}</p>
+            <p className="text-[11px] text-amber-400/90 font-medium">Owner: {existingLead.ownerName || 'Admin'}</p>
           </div>
         </div>
 

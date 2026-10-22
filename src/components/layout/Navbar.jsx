@@ -19,9 +19,8 @@ import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
 
 export function Navbar() {
-  const { currentUser, users, switchUser, isAdmin } = useAuth();
+  const { currentUser, isAdmin } = useAuth();
   const [health, setHealth] = useState(null);
-  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -118,54 +117,14 @@ export function Navbar() {
               </div>
             </div>
 
-            {/* Quick User Switcher */}
-            <div className="relative">
-              <button
-                onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-750 border border-slate-700 text-xs font-medium text-slate-200 transition"
-              >
-                <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-[10px] font-bold text-white uppercase">
-                  {currentUser?.displayName?.charAt(0) || 'U'}
-                </div>
-                <div className="text-left hidden sm:block">
-                  <p className="font-semibold text-slate-200 leading-tight">{currentUser?.displayName?.split(' ')[0]}</p>
-                  <p className="text-[10px] text-blue-400 font-mono leading-none">{currentUser?.role}</p>
-                </div>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-              </button>
-
-              {userDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-64 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl p-2 z-50">
-                  <div className="px-2 py-1.5 border-b border-slate-800 mb-1">
-                    <p className="text-xs font-semibold text-slate-200">Switch User Persona</p>
-                    <p className="text-[11px] text-slate-400">Test different role permissions</p>
-                  </div>
-                  {users.map(u => (
-                    <button
-                      key={u.uid}
-                      onClick={() => {
-                        switchUser(u.uid);
-                        setUserDropdownOpen(false);
-                      }}
-                      className={`w-full flex items-center justify-between p-2 rounded-lg text-left text-xs transition ${
-                        currentUser?.uid === u.uid ? 'bg-blue-600/20 text-blue-300 font-semibold' : 'text-slate-300 hover:bg-slate-800'
-                      }`}
-                    >
-                      <div>
-                        <p>{u.displayName}</p>
-                        <p className="text-[10px] text-slate-500 font-mono">{u.email}</p>
-                      </div>
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-mono ${
-                        u.role === 'Admin' ? 'bg-purple-950 text-purple-300 border border-purple-800' :
-                        u.role === 'Sales' ? 'bg-blue-950 text-blue-300 border border-blue-800' :
-                        'bg-slate-800 text-slate-400 border border-slate-700'
-                      }`}>
-                        {u.role}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
+            {/* User Indicator */}
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-850 border border-slate-750 text-xs font-medium text-slate-200">
+              <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-[10px] font-bold text-white uppercase">
+                {currentUser?.displayName?.charAt(0) || 'A'}
+              </div>
+              <div className="text-left hidden sm:block">
+                <p className="font-semibold text-slate-200 leading-tight">{currentUser?.displayName || 'Admin'}</p>
+              </div>
             </div>
           </div>
         </div>

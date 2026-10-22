@@ -18,9 +18,11 @@ import {
   Layers
 } from 'lucide-react';
 import { api } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import { StageBadge, PriorityBadge } from '../components/common/Badge';
 
 export function DashboardPage() {
+  const { currentUser } = useAuth();
   const [analytics, setAnalytics] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [health, setHealth] = useState(null);
@@ -30,11 +32,12 @@ export function DashboardPage() {
   const loadData = async () => {
     try {
       setLoading(true);
+      const queryParams = currentUser?.uid ? { owner: currentUser.uid } : {};
       const [analyticsData, tasksData, healthData, leadsData] = await Promise.all([
-        api.getAnalytics(),
-        api.getTasks(),
+        api.getAnalytics(queryParams),
+        api.getTasks(queryParams),
         api.getHealth(),
-        api.getLeads()
+        api.getLeads(queryParams)
       ]);
       setAnalytics(analyticsData);
       setTasks(tasksData);
@@ -49,7 +52,7 @@ export function DashboardPage() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [currentUser?.uid]);
 
   const handleCompleteTask = async (taskId) => {
     try {
@@ -82,15 +85,15 @@ export function DashboardPage() {
 
         <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-cyan-400 border border-blue-500/20">
               <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Chhatrapati Sambhajinagar Pilot — High Priority Clinics</span>
+              <span>Workspace: {currentUser?.companyName || 'LeadPilot Workspace'}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              Lead Generation & Sales Command Center
+              Welcome, {currentUser?.displayName || 'User'} 👋
             </h1>
             <p className="text-sm text-slate-400 max-w-2xl leading-relaxed">
-              Find businesses → identify opportunities → contact responsibly → follow up consistently → close deals.
+              Your personalized B2B client acquisition workspace. Find businesses, track conversions, and close deals.
             </p>
           </div>
 
@@ -317,9 +320,9 @@ export function DashboardPage() {
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-slate-500">
                     <Compass className="w-8 h-8 text-blue-500/40 mx-auto mb-2" />
-                    <p className="text-sm font-semibold text-slate-300">No leads in CRM yet</p>
+                    <p className="text-sm font-semibold text-slate-300">No leads in your workspace yet</p>
                     <p className="text-xs text-slate-500 mt-1">
-                      Start discovering businesses or saving prospects to Firestore under tenant <code className="text-cyan-400">icoded-leads-abhi</code>.
+                      Search local businesses by category or location and save high-potential prospects to your CRM.
                     </p>
                     <NavLink
                       to="/discover"
@@ -349,7 +352,7 @@ export function DashboardPage() {
                       {lead.dealValue ? `₹${lead.dealValue.toLocaleString()}` : '—'}
                     </td>
                     <td className="px-4 py-3 text-right text-slate-400 font-medium">
-                      {lead.ownerName || 'Pooja Deshmukh'}
+                      {lead.ownerName || 'Admin'}
                     </td>
                   </tr>
                 ))

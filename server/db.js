@@ -34,40 +34,15 @@ if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
-// Initial Real Users for iCoded
+// Initial Admin User for LeadFinder
 const INITIAL_USERS = [
   {
     uid: 'user_admin_01',
-    displayName: 'Aditya Shinde (Founder)',
-    email: 'aditya@icoded.in',
+    displayName: 'LeadPilot Admin',
+    email: 'admin@icoded.in',
+    password: 'admin123',
+    companyName: 'LeadPilot Pro',
     role: 'Admin',
-    active: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    uid: 'user_sales_01',
-    displayName: 'Pooja Deshmukh (Sales Lead)',
-    email: 'pooja@icoded.in',
-    role: 'Sales',
-    active: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    uid: 'user_sales_02',
-    displayName: 'Rohan Patil (SDR)',
-    email: 'rohan@icoded.in',
-    role: 'Sales',
-    active: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    uid: 'user_analyst_01',
-    displayName: 'Sneha More (Market Analyst)',
-    email: 'sneha@icoded.in',
-    role: 'Analyst',
     active: true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
@@ -156,6 +131,7 @@ Enterprise Solutions | iCoded Automation`,
 
 const INITIAL_SETTINGS = {
   tenantId: TENANT_ID,
+  googlePlacesApiKey: process.env.GOOGLE_PLACES_API_KEY || '',
   outboundEmailKillSwitch: false,
   dailyEmailLimit: 50,
   placesApiStatus: 'Connected',
@@ -251,8 +227,24 @@ class Database {
       // Load Users
       const usersSnap = await getDocs(getTenantCollection('users'));
       if (!usersSnap.empty) {
-        this.users = usersSnap.docs.map(d => ({ uid: d.id, ...d.data() }));
+        const cloudUsers = usersSnap.docs.map(d => ({ uid: d.id, ...d.data() }));
+        const mockUids = ['user_sales_01', 'user_sales_02', 'user_analyst_01'];
+        this.users = cloudUsers.filter(u => 
+          !mockUids.includes(u.uid) && 
+          !u.displayName?.includes('(Market Analyst)') && 
+          !u.displayName?.includes('(Sales Lead)') && 
+          !u.displayName?.includes('(SDR)')
+        );
+        let adminUser = this.users.find(u => (u.email || '').toLowerCase() === 'admin@icoded.in');
+        if (!adminUser) {
+          adminUser = { ...INITIAL_USERS[0] };
+          this.users.unshift(adminUser);
+          await setDoc(getTenantDoc('users', adminUser.uid), adminUser).catch(() => {});
+        } else if (!adminUser.password) {
+          adminUser.password = 'admin123';
+        }
       } else {
+        this.users = [...INITIAL_USERS];
         for (const u of this.users) {
           await setDoc(getTenantDoc('users', u.uid), u).catch(() => {});
         }
@@ -284,9 +276,57 @@ class Database {
     }
   }
 
-  // Users
+  // Users & Auth
   getUsers() { return this.users; }
   getUser(uid) { return this.users.find(u => u.uid === uid); }
+  findUserById(uid) { return this.users.find(u => u.uid === uid); }
+  findUserByEmail(email) {
+    if (!email) return null;
+    return this.users.find(u => (u.email || '').toLowerCase() === email.trim().toLowerCase());
+  }
+
+  async registerUser({ displayName, email, password, companyName }) {
+    const existing = this.findUserByEmail(email);
+    if (existing) {
+      throw new Error('An account with this email address already exists.');
+    }
+    const newUser = {
+      uid: `user_${Date.now()}`,
+      displayName: displayName.trim(),
+      email: email.trim().toLowerCase(),
+      password: password,
+      companyName: companyName ? companyName.trim() : 'LeadPilot Workspace',
+      role: 'Admin',
+      active: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    this.users.push(newUser);
+    this.saveLocalBackup();
+    await setDoc(getTenantDoc('users', newUser.uid), newUser).catch(console.error);
+    return newUser;
+  }
+
+  authenticateUser(email, password) {
+    if (!email || !password) return null;
+    const cleanEmail = email.trim().toLowerCase();
+    let user = this.findUserByEmail(cleanEmail);
+    if (!user) {
+      if (cleanEmail === 'admin@icoded.in' && password === 'admin123') {
+        user = { ...INITIAL_USERS[0] };
+        this.users.unshift(user);
+        this.saveLocalBackup();
+        return user;
+      }
+      return null;
+    }
+    const expectedPassword = user.password || 'admin123';
+    if (expectedPassword !== password && !(cleanEmail === 'admin@icoded.in' && password === 'admin123')) {
+      return null;
+    }
+    return user;
+  }
+
   async addUser(user) {
     this.users.push(user);
     this.saveLocalBackup();
@@ -395,7 +435,7 @@ class Database {
       cashCollected: Number(leadData.cashCollected) || 0,
       lossReason: leadData.lossReason || '',
       ownerUid: leadData.ownerUid || actorUid,
-      ownerName: leadData.ownerName || 'Pooja Deshmukh',
+      ownerName: leadData.ownerName || this.findUserById(actorUid)?.displayName || 'Admin',
       tags: leadData.tags || [],
       notes: leadData.notes || '',
       nextFollowUpAt: leadData.nextFollowUpAt || '',
@@ -487,8 +527,18 @@ class Database {
   }
 
   // Tasks
-  getTasks() {
-    return this.tasks;
+  getTasks(filters = {}) {
+    let list = [...this.tasks];
+    if (filters.owner && filters.owner !== 'All') {
+      list = list.filter(t => t.assignedTo === filters.owner || t.createdBy === filters.owner);
+    }
+    if (filters.leadId) {
+      list = list.filter(t => t.leadId === filters.leadId);
+    }
+    if (filters.status && filters.status !== 'All') {
+      list = list.filter(t => t.status === filters.status);
+    }
+    return list;
   }
 
   async createTask(taskData, actorUid = 'user_admin_01') {

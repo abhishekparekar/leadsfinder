@@ -40,9 +40,10 @@ export function TasksPage({ onOpenOutreach }) {
   const loadData = async () => {
     try {
       setLoading(true);
+      const queryParams = currentUser?.uid ? { owner: currentUser.uid } : {};
       const [tasksData, leadsData] = await Promise.all([
-        api.getTasks(),
-        api.getLeads()
+        api.getTasks(queryParams),
+        api.getLeads(queryParams)
       ]);
       setTasks(tasksData);
       setLeads(leadsData);
@@ -58,7 +59,7 @@ export function TasksPage({ onOpenOutreach }) {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [currentUser?.uid]);
 
   const handleCreateTask = async (e) => {
     e.preventDefault();

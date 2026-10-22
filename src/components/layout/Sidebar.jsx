@@ -9,13 +9,13 @@ import {
   ChevronDown, 
   ChevronRight,
   Download,
-  X
+  X,
+  LogOut
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export function Sidebar({ isOpen, onClose }) {
-  const { currentUser, users, switchUser } = useAuth();
-  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const { currentUser, logout } = useAuth();
   const location = useLocation();
 
   // Close mobile sidebar on route change
@@ -129,63 +129,27 @@ export function Sidebar({ isOpen, onClose }) {
           ))}
         </div>
 
-        {/* Footer / Active User Profile */}
-        <div className="p-4 border-t border-slate-800/80 bg-slate-950/90">
-          {/* User Persona Switcher */}
-          <div className="relative">
+        {/* Footer / User Profile & Logout */}
+        <div className="p-3 border-t border-slate-800/80 bg-slate-950/90">
+          <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-slate-900/80 border border-slate-800/90 shadow-sm">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 flex items-center justify-center text-xs font-bold text-white shadow-md shadow-blue-600/20 shrink-0">
+                {currentUser?.displayName?.charAt(0) || 'U'}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold text-white truncate">{currentUser?.displayName || 'User'}</p>
+                <p className="text-[10px] text-slate-400 font-mono truncate">{currentUser?.email || ''}</p>
+              </div>
+            </div>
             <button
-              onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-              className="w-full flex items-center justify-between p-2 rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 transition text-left group"
+              type="button"
+              onClick={logout}
+              title="Sign Out"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition shrink-0"
+              aria-label="Sign Out"
             >
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 flex items-center justify-center text-xs font-bold text-white shadow-md shadow-blue-600/20">
-                  {currentUser?.displayName?.charAt(0) || 'U'}
-                </div>
-                <div className="space-y-0.5">
-                  <p className="text-xs font-bold text-white group-hover:text-blue-300 transition truncate max-w-[120px]">
-                    {currentUser?.displayName?.split(' ')[0]}
-                  </p>
-                  <span className={`inline-block px-1.5 py-0.2 rounded text-[10px] font-mono font-bold ${
-                    currentUser?.role === 'Admin' ? 'text-purple-400' :
-                    currentUser?.role === 'Sales' ? 'text-blue-400' : 'text-slate-400'
-                  }`}>
-                    {currentUser?.role}
-                  </span>
-                </div>
-              </div>
-              <ChevronDown className="w-4 h-4 text-slate-500 group-hover:text-white transition" />
+              <LogOut className="w-4 h-4" />
             </button>
-
-            {userDropdownOpen && (
-              <div className="absolute bottom-full left-0 mb-2 w-full rounded-2xl bg-slate-900 border border-slate-750 shadow-2xl p-2 z-50 space-y-1">
-                <div className="px-2 py-1.5 border-b border-slate-800 mb-1">
-                  <p className="text-xs font-bold text-white">Switch Role Persona</p>
-                  <p className="text-[10px] text-slate-400">Test platform permissions</p>
-                </div>
-                {users.map(u => (
-                  <button
-                    key={u.uid}
-                    onClick={() => {
-                      switchUser(u.uid);
-                      setUserDropdownOpen(false);
-                    }}
-                    className={`w-full flex items-center justify-between p-2 rounded-xl text-left text-xs transition ${
-                      currentUser?.uid === u.uid
-                        ? 'bg-blue-600/20 text-blue-300 font-bold border border-blue-500/30'
-                        : 'text-slate-300 hover:bg-slate-800'
-                    }`}
-                  >
-                    <div className="truncate">
-                      <p className="font-semibold text-white truncate">{u.displayName}</p>
-                      <p className="text-[10px] text-slate-500 font-mono">{u.email}</p>
-                    </div>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-slate-300 border border-slate-700">
-                      {u.role}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
         </div>
       </aside>

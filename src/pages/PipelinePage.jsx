@@ -49,7 +49,7 @@ export function PipelinePage({ onOpenOutreach }) {
   const loadLeads = async () => {
     try {
       setLoading(true);
-      const data = await api.getLeads();
+      const data = await api.getLeads(currentUser?.uid ? { owner: currentUser.uid } : {});
       setLeads(data);
     } catch (err) {
       console.error(err);
@@ -60,7 +60,7 @@ export function PipelinePage({ onOpenOutreach }) {
 
   useEffect(() => {
     loadLeads();
-  }, []);
+  }, [currentUser?.uid]);
 
   const moveStage = async (lead, newStage) => {
     if (newStage === 'Won') {

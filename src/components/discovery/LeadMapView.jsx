@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { ScorePill } from '../common/ScorePill';
 import { PriorityBadge } from '../common/Badge';
-import { Phone, Globe, Plus, Check } from 'lucide-react';
+import { Phone, Globe, Plus, Check, ExternalLink } from 'lucide-react';
 
 // Fix default Leaflet icon paths in React
 const customIcon = new L.Icon({
@@ -81,6 +81,19 @@ export function LeadMapView({ results, onSaveLead, onViewLead, savingMap }) {
                       <p className="flex items-center gap-1 truncate text-blue-400">
                         <Globe className="w-3 h-3 text-blue-400 shrink-0" />
                         <span className="truncate">{item.businessWebsite.replace('https://', '')}</span>
+                      </p>
+                    )}
+                    {item.googleMapsUri && (
+                      <p className="pt-0.5">
+                        <a
+                          href={item.googleMapsUri}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-1 text-[10px] text-cyan-400 hover:underline"
+                        >
+                          <ExternalLink className="w-3 h-3 text-cyan-400 shrink-0" />
+                          <span>View on Google Maps</span>
+                        </a>
                       </p>
                     )}
                   </div>

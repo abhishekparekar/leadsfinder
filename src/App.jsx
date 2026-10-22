@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { Sidebar } from './components/layout/Sidebar';
 import { TopHeader } from './components/layout/TopHeader';
+import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { DiscoverPage } from './pages/DiscoverPage';
 import { LeadsPage } from './pages/LeadsPage';
@@ -10,9 +11,11 @@ import { TasksPage } from './pages/TasksPage';
 import { OutreachPage } from './pages/OutreachPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { useAuth } from './context/AuthContext';
 
 export function App() {
   const navigate = useNavigate();
+  const { isAuthenticated, loading } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [outreachTargetLead, setOutreachTargetLead] = useState(null);
 
@@ -21,6 +24,32 @@ export function App() {
     navigate('/outreach');
   };
 
+  // Loading Screen while verifying session
+  if (loading) {
+    return (
+      <div className="h-screen h-[100dvh] w-full flex flex-col items-center justify-center bg-slate-950 text-white font-sans">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 flex items-center justify-center text-sm font-black text-white shadow-xl shadow-blue-600/30 mb-4 animate-bounce">
+          LP
+        </div>
+        <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
+          <div className="w-3.5 h-3.5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+          <span>Loading workspace...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Unauthenticated: Direct access to LoginPage, redirect all other routes to /login
+  if (!isAuthenticated) {
+    return (
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    );
+  }
+
+  // Authenticated App Shell
   return (
     <div className="flex h-screen h-[100dvh] w-full overflow-hidden bg-slate-950 text-slate-100 font-sans antialiased selection:bg-blue-600 selection:text-white">
       {/* Left Sidebar (Desktop persistent + Mobile slide-over drawer) */}
@@ -34,17 +63,19 @@ export function App() {
         {/* Scrollable Content Container (Only this view scrolls!) */}
         <main id="main-content-scroll" className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-5 lg:p-7 scroll-smooth">
           <Routes>
-            <Route path="/" element={<DiscoverPage onOpenOutreach={handleOpenOutreach} />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/login" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/find" element={<DiscoverPage onOpenOutreach={handleOpenOutreach} />} />
             <Route path="/discover" element={<DiscoverPage onOpenOutreach={handleOpenOutreach} />} />
             <Route path="/saved" element={<LeadsPage onOpenOutreach={handleOpenOutreach} />} />
             <Route path="/leads" element={<LeadsPage onOpenOutreach={handleOpenOutreach} />} />
             <Route path="/outreach" element={<OutreachPage prefilledLead={outreachTargetLead} />} />
             <Route path="/pipeline" element={<PipelinePage onOpenOutreach={handleOpenOutreach} />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/tasks" element={<TasksPage onOpenOutreach={handleOpenOutreach} />} />
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </main>
 

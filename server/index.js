@@ -23,6 +23,7 @@ const emailService = new EmailOutreachService(db);
 app.get('/api/health', (req, res) => {
   const settings = db.getSettings();
   const quota = placesAdapter.getQuotaStatus();
+  const hasKey = !!(settings.googlePlacesApiKey || process.env.GOOGLE_PLACES_API_KEY);
   res.json({
     status: 'healthy',
     version: '1.0.0',
@@ -30,6 +31,7 @@ app.get('/api/health', (req, res) => {
     provider: {
       name: 'Google Places API (New)',
       status: settings.placesApiStatus,
+      isLiveGoogleConnected: hasKey,
       requestsToday: quota.requestsToday,
       dailyQuota: quota.maxDailyQuota,
       lastSync: quota.lastSync
@@ -42,33 +44,83 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Users & Auth Mock
-app.get('/api/users', (req, res) => {
-  res.json(db.getUsers());
+// Authentication & Registration System
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { displayName, email, password, companyName } = req.body;
+    if (!displayName || !email || !password) {
+      return res.status(400).json({ error: 'Please enter your full name, email, and password.' });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
+    }
+    const user = await db.registerUser({ displayName, email, password, companyName });
+    const { password: _, ...safeUser } = user;
+    const token = `token_${user.uid}_${Date.now()}`;
+    res.status(201).json({ user: safeUser, token });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
-app.post('/api/users', async (req, res) => {
-  const { displayName, email, role } = req.body;
-  if (!displayName || !email || !role) {
-    return res.status(400).json({ error: 'Missing required user fields' });
+app.post('/api/auth/login', (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Please enter both your email address and password.' });
+    }
+    const user = db.authenticateUser(email, password);
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid email or password. Please check your credentials.' });
+    }
+    const { password: _, ...safeUser } = user;
+    const token = `token_${user.uid}_${Date.now()}`;
+    res.json({ user: safeUser, token });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-  const newUser = {
-    uid: `user_${Date.now()}`,
-    displayName,
-    email,
-    role,
-    active: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
-  await db.addUser(newUser);
-  res.json(newUser);
+});
+
+app.get('/api/auth/me', (req, res) => {
+  try {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.replace('Bearer ', '').trim();
+    if (!token) {
+      return res.status(401).json({ error: 'No authorization token provided' });
+    }
+    const parts = token.split('_');
+    if (parts.length >= 2) {
+      // Token format: token_user_123456789_timestamp
+      const uid = parts.slice(1, -1).join('_');
+      const user = db.findUserById(uid);
+      if (user) {
+        const { password: _, ...safeUser } = user;
+        return res.json({ user: safeUser });
+      }
+    }
+    const defaultUser = db.getUsers()[0];
+    if (defaultUser) {
+      const { password: _, ...safeUser } = defaultUser;
+      return res.json({ user: safeUser });
+    }
+    res.status(401).json({ error: 'Session expired' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Users
+app.get('/api/users', (req, res) => {
+  res.json(db.getUsers().map(({ password, ...u }) => u));
 });
 
 // Business Discovery Search (PRD Section 7.2 & 7.3)
 app.get('/api/search', async (req, res) => {
   try {
     const { query, category, location, radius, websiteFilter, phoneFilter, minRating } = req.query;
+    const settings = db.getSettings();
+    const activeApiKey = settings?.googlePlacesApiKey || process.env.GOOGLE_PLACES_API_KEY || '';
+
     const searchResult = await placesAdapter.searchBusinesses({
       query,
       category,
@@ -76,7 +128,8 @@ app.get('/api/search', async (req, res) => {
       radius: Number(radius) || 10,
       websiteFilter,
       phoneFilter,
-      minRating: Number(minRating) || 0
+      minRating: Number(minRating) || 0,
+      apiKey: activeApiKey
     });
 
     // Cross-reference each result against saved CRM leads for duplicate / saved check
@@ -228,7 +281,7 @@ app.post('/api/leads/:id/activities', async (req, res) => {
 
 // Follow-ups & Tasks (PRD Section 7.6 & 10.4)
 app.get('/api/tasks', (req, res) => {
-  res.json(db.getTasks());
+  res.json(db.getTasks(req.query));
 });
 
 app.post('/api/tasks', async (req, res) => {
@@ -434,8 +487,8 @@ app.get('/api/export/csv', (req, res) => {
 
 // Analytics & Reports (PRD Section 7.9)
 app.get('/api/reports/analytics', (req, res) => {
-  const leads = db.getLeads();
-  const tasks = db.getTasks();
+  const leads = db.getLeads(req.query);
+  const tasks = db.getTasks(req.query);
 
   const stageCounts = {
     New: 0,
@@ -517,6 +570,21 @@ app.patch('/api/settings', async (req, res) => {
   const { updates, actorUid } = req.body;
   const newSettings = await db.updateSettings(updates, actorUid || 'user_admin_01');
   res.json(newSettings);
+});
+
+// Verify Google Places API Key
+app.post('/api/settings/verify-google-api', async (req, res) => {
+  try {
+    const { apiKey } = req.body;
+    const keyToTest = apiKey || db.getSettings()?.googlePlacesApiKey || process.env.GOOGLE_PLACES_API_KEY;
+    if (!keyToTest) {
+      return res.status(400).json({ success: false, error: 'No Google Places API key provided.' });
+    }
+    const result = await placesAdapter.testGooglePlacesApiKey(keyToTest);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 // Serve static client bundle with cache-busting

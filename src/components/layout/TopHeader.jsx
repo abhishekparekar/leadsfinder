@@ -5,13 +5,14 @@ import {
   Search, 
   Send, 
   Sparkles,
-  Download
+  Download,
+  LogOut
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export function TopHeader({ onToggleSidebar }) {
   const location = useLocation();
-  const { currentUser } = useAuth();
+  const { currentUser, logout } = useAuth();
 
   const getPageMeta = (pathname) => {
     switch (pathname) {
@@ -82,14 +83,23 @@ export function TopHeader({ onToggleSidebar }) {
             <span>Outreach</span>
           </NavLink>
 
-          {/* Quick User Avatar in Header */}
-          <div className="hidden md:flex items-center gap-2 pl-2 border-l border-slate-800">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center text-[11px] font-bold text-white shadow-sm">
+          {/* Quick User Avatar & Logout */}
+          <div className="flex items-center gap-2 pl-2 border-l border-slate-800">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center text-[11px] font-bold text-white shadow-sm shrink-0">
               {currentUser?.displayName?.charAt(0) || 'U'}
             </div>
-            <span className="text-xs text-slate-300 font-medium truncate max-w-[90px]">
+            <span className="text-xs text-slate-300 font-medium truncate max-w-[100px] hidden sm:inline">
               {currentUser?.displayName?.split(' ')[0]}
             </span>
+            <button
+              type="button"
+              onClick={logout}
+              title="Sign Out"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-900 border border-transparent hover:border-slate-800 transition"
+              aria-label="Log Out"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
       </div>

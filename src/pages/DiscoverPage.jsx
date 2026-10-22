@@ -103,16 +103,6 @@ export function getCategoryIcon(cat, className = "w-3.5 h-3.5") {
   }
 }
 
-const POPULAR_LOCATIONS = [
-  'Chhatrapati Sambhajinagar',
-  'Cannaught Place, CIDCO',
-  'Kranti Chowk, Jalna Road',
-  'Town Centre, CIDCO',
-  'Nirala Bazar',
-  'Garkheda Parisar',
-  'Pune',
-  'Mumbai'
-];
 
 export function DiscoverPage({ onOpenOutreach }) {
   const { currentUser } = useAuth();
@@ -139,7 +129,6 @@ export function DiscoverPage({ onOpenOutreach }) {
   // UI helpers & Modals
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [newCatInput, setNewCatInput] = useState('');
-  const [showLocationMenu, setShowLocationMenu] = useState(false);
 
   // View mode & selection
   const [viewMode, setViewMode] = useState('list'); // 'list' | 'map'
@@ -148,6 +137,14 @@ export function DiscoverPage({ onOpenOutreach }) {
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [bulkSaving, setBulkSaving] = useState(false);
+  const [engineStatus, setEngineStatus] = useState(null);
+  const [searchMeta, setSearchMeta] = useState(null);
+
+  useEffect(() => {
+    api.getHealth().then(h => {
+      if (h && h.provider) setEngineStatus(h.provider);
+    }).catch(() => {});
+  }, []);
 
   // Modals
   const [savingMap, setSavingMap] = useState({});
@@ -208,6 +205,12 @@ export function DiscoverPage({ onOpenOutreach }) {
         minRating
       });
       setResults(res.results || []);
+      setSearchMeta({
+        sourceName: res.sourceName,
+        isLiveGoogle: res.isLiveGoogle,
+        attribution: res.attribution,
+        totalResults: res.totalResults
+      });
     } catch (err) {
       alert('Search failed: ' + err.message);
     } finally {
@@ -306,45 +309,7 @@ export function DiscoverPage({ onOpenOutreach }) {
   };
 
   return (
-    <div className="space-y-6 pb-12">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-            <span>Discover Business Prospects</span>
-          </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Search prospective local businesses by category, location, and service opportunity signals.
-          </p>
-        </div>
-
-        {/* View Toggle */}
-        <div className="flex items-center gap-2 bg-slate-900 p-1 rounded-xl border border-slate-800">
-          <button
-            onClick={() => setViewMode('list')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
-              viewMode === 'list'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <List className="w-4 h-4" />
-            <span>List View</span>
-          </button>
-          <button
-            onClick={() => setViewMode('map')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
-              viewMode === 'map'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Map className="w-4 h-4" />
-            <span>Map View</span>
-          </button>
-        </div>
-      </div>
-
+    <div className="space-y-4 pb-12">
       {/* Google Maps Style Unified Search & Filter Command Center */}
       <div className="space-y-3">
         <form onSubmit={handleSearch} className="p-3 sm:p-4 rounded-2xl bg-slate-900 border border-slate-700/80 shadow-2xl space-y-3">
@@ -393,19 +358,18 @@ export function DiscoverPage({ onOpenOutreach }) {
               </button>
             </div>
 
-            {/* Field 2: Google Maps Location Field with Map Pin & Autocomplete */}
+            {/* Field 2: Open Location Field (Any City, State, or Region Worldwide) */}
             <div className="sm:col-span-2 lg:col-span-4 relative flex items-center bg-slate-950 rounded-xl border border-slate-800 hover:border-slate-700 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition px-3 py-2 gap-2">
-              <MapPin className="w-4 h-4 text-rose-500 fill-rose-500/20 shrink-0 animate-pulse" />
+              <MapPin className="w-4 h-4 text-rose-500 fill-rose-500/20 shrink-0" />
               <div className="flex-1 min-w-0">
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Location (City / Area)
+                  Target Location (City / Region)
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Cannaught Place, Chhatrapati Sambhajinagar"
+                  placeholder="Enter any City, Town, or Region (e.g. Pune, Mumbai, Sambhajinagar, All)..."
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  onFocus={() => setShowLocationMenu(true)}
                   className="w-full bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none font-medium truncate"
                 />
               </div>
@@ -415,84 +379,22 @@ export function DiscoverPage({ onOpenOutreach }) {
                   type="button"
                   onClick={() => setLocation('')}
                   className="text-slate-500 hover:text-slate-300 p-1"
-                  title="Clear location"
+                  title="Clear location (Search All)"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
               )}
-
-              {/* Quick location menu toggle */}
-              <button
-                type="button"
-                onClick={() => setShowLocationMenu(!showLocationMenu)}
-                className="text-slate-400 hover:text-cyan-400 p-1 transition"
-                title="Select from popular areas"
-              >
-                <Navigation className="w-3.5 h-3.5" />
-              </button>
-
-              {/* Floating Area Suggestions Dropdown */}
-              {showLocationMenu && (
-                <div 
-                  className="absolute left-0 right-0 top-full mt-2 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-2 z-50 space-y-1 backdrop-blur-md"
-                  onMouseLeave={() => setShowLocationMenu(false)}
-                >
-                  <div className="flex items-center justify-between px-2 py-1 text-[11px] font-bold uppercase text-slate-400 border-b border-slate-800">
-                    <span className="flex items-center gap-1">
-                      <MapPinned className="w-3.5 h-3.5 text-rose-400" />
-                      Popular Search Locations
-                    </span>
-                    <button 
-                      type="button"
-                      onClick={() => setShowLocationMenu(false)}
-                      className="text-slate-400 hover:text-white"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                  <div className="max-h-48 overflow-y-auto space-y-0.5 pt-1">
-                    {POPULAR_LOCATIONS.map((loc) => (
-                      <button
-                        key={loc}
-                        type="button"
-                        onClick={() => {
-                          setLocation(loc);
-                          setShowLocationMenu(false);
-                          handleSearch(null, undefined, loc);
-                        }}
-                        className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs transition flex items-center justify-between ${
-                          location === loc 
-                            ? 'bg-blue-600/20 text-blue-300 font-bold border border-blue-500/30' 
-                            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                        }`}
-                      >
-                        <span className="flex items-center gap-2">
-                          <MapPin className="w-3 h-3 text-rose-400" />
-                          <span>{loc}</span>
-                        </span>
-                        {location === loc && <Check className="w-3 h-3 text-blue-400" />}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
 
-            {/* Field 3: Radius Selector */}
-            <div className="col-span-1 lg:col-span-1.5 bg-slate-950 rounded-xl border border-slate-800 px-2.5 py-2">
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                Radius
+            {/* Field 3: Unlimited Leads Targeting Mode (No Radius Restriction) */}
+            <div className="col-span-1 lg:col-span-1.5 bg-slate-950 rounded-xl border border-emerald-500/30 px-2.5 py-2 flex flex-col justify-center">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-emerald-400/80">
+                Coverage
               </label>
-              <select
-                value={radius}
-                onChange={(e) => setRadius(Number(e.target.value))}
-                className="w-full bg-transparent text-xs text-white focus:outline-none cursor-pointer appearance-none"
-              >
-                <option value={5} className="bg-slate-900">5 km</option>
-                <option value={10} className="bg-slate-900">10 km</option>
-                <option value={25} className="bg-slate-900">25 km</option>
-                <option value={50} className="bg-slate-900">50 km</option>
-              </select>
+              <div className="text-xs text-emerald-400 font-bold flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                <span>Unlimited</span>
+              </div>
             </div>
 
             {/* Field 4: Google Maps Search Action Button */}
@@ -568,15 +470,36 @@ export function DiscoverPage({ onOpenOutreach }) {
                   <option value={4.5}>4.5+ Stars</option>
                 </select>
               </div>
+
+              {/* View Toggle (List View / Map View) */}
+              <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 sm:ml-auto">
+                <button
+                  type="button"
+                  onClick={() => setViewMode('list')}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition ${
+                    viewMode === 'list'
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                  }`}
+                >
+                  <List className="w-3.5 h-3.5" />
+                  <span>List View</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('map')}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition ${
+                    viewMode === 'map'
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                  }`}
+                >
+                  <Map className="w-3.5 h-3.5" />
+                  <span>Map View</span>
+                </button>
+              </div>
             </div>
 
-            <div className="text-[11px] text-slate-400 font-mono">
-              {hasSearched ? (
-                <span className="text-cyan-400 font-semibold">{results.length} prospective businesses found</span>
-              ) : (
-                <span className="text-slate-500">Pick a category & location to search</span>
-              )}
-            </div>
           </div>
         </form>
 
@@ -627,30 +550,6 @@ export function DiscoverPage({ onOpenOutreach }) {
               </div>
             );
           })}
-        </div>
-
-        {/* Quick Area Preset Chips (Google Maps Nearby Suggestions) */}
-        <div className="flex items-center gap-1.5 overflow-x-auto text-xs text-slate-400 pb-1 touch-pan-x">
-          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1">
-            <MapPin className="w-3 h-3 text-rose-400" /> Areas:
-          </span>
-          {POPULAR_LOCATIONS.map((loc) => (
-            <button
-              key={loc}
-              type="button"
-              onClick={() => {
-                setLocation(loc);
-                handleSearch(null, undefined, loc);
-              }}
-              className={`shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-medium transition ${
-                location === loc
-                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 font-bold'
-                  : 'bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800/80'
-              }`}
-            >
-              {loc.split(',')[0]}
-            </button>
-          ))}
         </div>
       </div>
 
@@ -844,6 +743,29 @@ export function DiscoverPage({ onOpenOutreach }) {
                             </span>
                           )}
                         </div>
+
+                        {/* Direct Google Maps Navigation */}
+                        {item.googleMapsUri && (
+                          <div className="flex items-center justify-between pt-1.5 border-t border-slate-800/60 text-[11px]">
+                            <a
+                              href={item.googleMapsUri}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-cyan-400 hover:text-cyan-300 hover:underline flex items-center gap-1 font-medium"
+                              title="Open in Google Maps"
+                            >
+                              <ExternalLink className="w-3 h-3 text-cyan-400 shrink-0" />
+                              <span>View on Google Maps</span>
+                            </a>
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                              item.sourceName?.includes('Google')
+                                ? 'bg-blue-500/15 text-blue-300 border border-blue-500/30'
+                                : 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                            }`}>
+                              {item.sourceName?.includes('Google') ? 'Google Verified' : 'Directory Verified'}
+                            </span>
+                          </div>
+                        )}
                       </div>
 
                       {/* Identified Opportunities */}

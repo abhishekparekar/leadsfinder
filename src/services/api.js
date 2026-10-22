@@ -4,7 +4,47 @@
 
 const BASE_URL = '/api';
 
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('leadpilot_token');
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+  };
+};
+
 export const api = {
+  // Authentication
+  login: async (credentials) => {
+    const res = await fetch(`${BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Login failed');
+    return data;
+  },
+
+  register: async (userData) => {
+    const res = await fetch(`${BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData)
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Registration failed');
+    return data;
+  },
+
+  getMe: async () => {
+    const res = await fetch(`${BASE_URL}/auth/me`, {
+      headers: getAuthHeaders()
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to authenticate');
+    return data;
+  },
+
   // Health
   getHealth: async () => {
     const res = await fetch(`${BASE_URL}/health`);
@@ -13,14 +53,8 @@ export const api = {
 
   // Users
   getUsers: async () => {
-    const res = await fetch(`${BASE_URL}/users`);
-    return res.json();
-  },
-  createUser: async (userData) => {
     const res = await fetch(`${BASE_URL}/users`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(userData)
+      headers: getAuthHeaders()
     });
     return res.json();
   },
@@ -210,6 +244,14 @@ export const api = {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ updates, actorUid })
+    });
+    return res.json();
+  },
+  verifyGooglePlacesKey: async (apiKey) => {
+    const res = await fetch(`${BASE_URL}/settings/verify-google-api`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ apiKey })
     });
     return res.json();
   }

@@ -16,7 +16,8 @@ import {
   DollarSign,
   TrendingUp,
   Send,
-  Plus
+  Plus,
+  ExternalLink
 } from 'lucide-react';
 import { PriorityBadge, StageBadge } from '../common/Badge';
 import { ScorePill } from '../common/ScorePill';
@@ -317,6 +318,20 @@ export function LeadDetailModal({ leadId, onClose, onLeadUpdated, onOpenOutreach
                           <MapPin className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
                           <span className="text-slate-300">{lead.address || `${lead.locality}, ${lead.city}`}</span>
                         </div>
+
+                        {(lead.googleMapsUri || (lead.businessName && lead.city)) && (
+                          <div className="flex items-center gap-2 pt-1 border-t border-slate-700/50">
+                            <ExternalLink className="w-4 h-4 text-cyan-400 shrink-0" />
+                            <a
+                              href={lead.googleMapsUri || `https://maps.google.com/?q=${encodeURIComponent(lead.businessName + ' ' + (lead.address || lead.city))}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-cyan-400 hover:underline flex items-center gap-1 font-medium"
+                            >
+                              <span>Open on Google Maps</span>
+                            </a>
+                          </div>
+                        )}
                       </div>
                     </div>
 

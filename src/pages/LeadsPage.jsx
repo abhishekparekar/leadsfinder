@@ -48,7 +48,8 @@ export function LeadsPage({ onOpenOutreach }) {
         search,
         priority: priorityFilter,
         stage: stageFilter,
-        hasWebsite: hasWebsiteFilter
+        hasWebsite: hasWebsiteFilter,
+        ...(currentUser?.uid ? { owner: currentUser.uid } : {})
       });
       setLeads(data);
     } catch (err) {
@@ -60,7 +61,7 @@ export function LeadsPage({ onOpenOutreach }) {
 
   useEffect(() => {
     loadLeads();
-  }, [stageFilter, priorityFilter, hasWebsiteFilter]);
+  }, [stageFilter, priorityFilter, hasWebsiteFilter, currentUser?.uid]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
