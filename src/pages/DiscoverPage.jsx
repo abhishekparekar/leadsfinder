@@ -317,7 +317,7 @@ export function DiscoverPage({ onOpenOutreach }) {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5 items-center">
             
             {/* Field 1: Service / Business Category with + Add Category button */}
-            <div className="sm:col-span-2 lg:col-span-5 relative flex items-center bg-slate-950 rounded-xl border border-slate-800 hover:border-slate-700 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition px-3 py-2 gap-2">
+            <div className="sm:col-span-1 lg:col-span-5 relative flex items-center bg-slate-950 rounded-xl border border-slate-800 hover:border-slate-700 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition px-3 py-2 gap-2">
               <Store className="w-4 h-4 text-cyan-400 shrink-0" />
               <div className="flex-1 min-w-0">
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
@@ -359,7 +359,7 @@ export function DiscoverPage({ onOpenOutreach }) {
             </div>
 
             {/* Field 2: Open Location Field (Any City, State, or Region Worldwide) */}
-            <div className="sm:col-span-2 lg:col-span-4 relative flex items-center bg-slate-950 rounded-xl border border-slate-800 hover:border-slate-700 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition px-3 py-2 gap-2">
+            <div className="sm:col-span-1 lg:col-span-5 relative flex items-center bg-slate-950 rounded-xl border border-slate-800 hover:border-slate-700 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition px-3 py-2 gap-2">
               <MapPin className="w-4 h-4 text-rose-500 fill-rose-500/20 shrink-0" />
               <div className="flex-1 min-w-0">
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
@@ -386,19 +386,8 @@ export function DiscoverPage({ onOpenOutreach }) {
               )}
             </div>
 
-            {/* Field 3: Unlimited Leads Targeting Mode (No Radius Restriction) */}
-            <div className="col-span-1 lg:col-span-1.5 bg-slate-950 rounded-xl border border-emerald-500/30 px-2.5 py-2 flex flex-col justify-center">
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-emerald-400/80">
-                Coverage
-              </label>
-              <div className="text-xs text-emerald-400 font-bold flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                <span>Unlimited</span>
-              </div>
-            </div>
-
-            {/* Field 4: Google Maps Search Action Button */}
-            <div className="col-span-1 lg:col-span-1.5">
+            {/* Google Maps Search Action Button */}
+            <div className="col-span-1 sm:col-span-2 lg:col-span-2">
               <button
                 type="submit"
                 disabled={loading}
